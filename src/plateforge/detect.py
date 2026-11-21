@@ -55,3 +55,43 @@ def _dedupe(candidates, overlap=0.5):
         if not duplicate:
             kept.append(cand)
     return kept
+
+
+def score_candidate(candidate, frame_shape):
+    """Score how plate-like a candidate is, from 0 to 100.
+
+    Real plates are wide and flat (aspect about 3–5), a sensible
+    size for the frame, and sit in the lower half of the image where
+    cars drive. Each of those earns points.
+    """
+    height, width = frame_shape[:2]
+    score = 0.0
+    aspect = candidate.aspect_ratio
+    if 3.0 <= aspect <= 5.0:
+        score += 40
+    elif 2.0 <= aspect <= 6.0:
+        score += 20
+    frame_area = width * height
+    share = candidate.area / frame_area if frame_area else 0
+    if 0.005 <= share <= 0.15:
+        score += 30
+    elif 0.001 <= share <= 0.25:
+        score += 15
+    centre_y = candidate.y + candidate.height / 2
+    if centre_y > height * 0.4:
+        score += 30
+    elif centre_y > height * 0.25:
+        score += 15
+    return round(min(score, 100.0), 1)
+
+
+def score_candidates(candidates, frame_shape):
+    """Score every candidate in place and return them best first."""
+    for cand in candidates:
+        cand.score = score_candidate(cand, frame_shape)
+    return sorted(candidates, key=lambda c: c.score, reverse=True)
+
+
+def filter_candidates(candidates, frame_shape, min_score=50):
+    """Keep only candidates that score high enough to be a plate."""
+    return [c for c in score_candidates(candidates, frame_shape) if c.score >= min_score]
