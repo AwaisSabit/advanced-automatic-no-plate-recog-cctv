@@ -1,0 +1,2 @@
+# One video path per line, for: plateforge batch examples/batch-list.txt
+examples/output/cctv-demo.mp4

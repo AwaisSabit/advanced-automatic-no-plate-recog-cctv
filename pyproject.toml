@@ -35,7 +35,7 @@ test = ["pytest>=8"]
 plateforge = "plateforge.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/AwaisSabit/advanced-anpr-cctv"
+Homepage = "https://github.com/AwaisSabit/advanced-automatic-no-plate-recog-cctv"
 
 [tool.setuptools.packages.find]
 where = ["src"]

@@ -42,8 +42,8 @@ writes a searchable log, so the plate is found in minutes, not hours.
 Requires Python 3.11 or newer.
 
 ```bash
-git clone https://github.com/AwaisSabit/advanced-anpr-cctv.git
-cd advanced-anpr-cctv
+git clone https://github.com/AwaisSabit/advanced-automatic-no-plate-recog-cctv.git
+cd advanced-automatic-no-plate-recog-cctv
 python -m venv .venv
 source .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -e .[test]           # editable install, including pytest
@@ -51,13 +51,65 @@ pip install -e .[test]           # editable install, including pytest
 
 ## Usage
 
+### Video info
+
 ```bash
 plateforge info cctv.mp4
-plateforge detect cctv.mp4 --output-dir detections
+```
+
+```text
+Video: cctv.mp4
+Duration: 5.00s
+FPS: 10.0
+Frames: 50
+Resolution: 640x360
+Codec: FMP4
+```
+
+### Detect plate regions
+
+```bash
+plateforge detect cctv.mp4 --every-seconds 1
+```
+
+### Read plates and write the log
+
+```bash
 plateforge read cctv.mp4 --output-dir readings
-plateforge log readings/plates.csv --search ABC-123
+```
+
+This writes `readings/plates.csv`, `readings/plates.json`,
+`readings/report.md` and a snapshot PNG per plate in
+`readings/snapshots/`.
+
+### Search the log
+
+```bash
+plateforge log readings/plates.csv
 plateforge search readings/plates.csv --plate ABC-123
-plateforge batch videos.txt --output-dir results
+plateforge search readings/plates.csv --start 10 --end 60
+```
+
+### Batch processing
+
+```bash
+plateforge batch examples/batch-list.txt --output-dir results
+```
+
+### As a library
+
+```python
+from plateforge.batch import process_video
+
+entries = process_video("cctv.mp4", "readings", every_seconds=1)
+for entry in entries:
+    print(entry.video_time, entry.plate, entry.confidence)
+```
+
+### Demo
+
+```bash
+python examples/demo.py        # writes examples/output/*.png and the log
 ```
 
 ## Tests

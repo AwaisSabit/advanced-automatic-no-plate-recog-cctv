@@ -10,7 +10,6 @@ build/
 *.avi
 *.mov
 *.mkv
-examples/output/
 results/
 detections/
 readings/

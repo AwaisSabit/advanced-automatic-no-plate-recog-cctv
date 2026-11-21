@@ -16,12 +16,14 @@ def process_video(path, output_dir, every_seconds=1, min_confidence=0.8):
     """Run detection, OCR and logging on one video.
 
     Returns the list of LogEntry objects written. Writes plates.csv,
-    plates.json, snapshots and a report.md into output_dir.
+    plates.json, snapshots and a report.md into output_dir. Snapshots
+    are saved only for plates that survive duplicate suppression, so
+    the snapshot folder matches the log.
     """
     os.makedirs(output_dir, exist_ok=True)
     snapshot_dir = os.path.join(output_dir, "snapshots")
     os.makedirs(snapshot_dir, exist_ok=True)
-    entries = []
+    found = []  # (entry, frame, box) for every readable plate seen
     prev_frame = None
     for index, timestamp, frame in extract_by_interval(path, every_seconds=every_seconds):
         vehicles = vehicle_regions(prev_frame, frame) if prev_frame is not None else [(0, 0, frame.shape[1], frame.shape[0])]
@@ -37,7 +39,9 @@ def process_video(path, output_dir, every_seconds=1, min_confidence=0.8):
             if not cleaned:
                 continue
             score = confidence_score(cleaned, ocr_conf)
-            reading_valid = is_valid_plate(cleaned)
+            reading = PlateReading(raw_text, cleaned, ocr_conf, cand.box, index, timestamp, is_valid_plate(cleaned))
+            if not filter_readings([reading], min_confidence=min_confidence):
+                continue
             entry = LogEntry(
                 plate=cleaned,
                 confidence=score,
@@ -47,15 +51,14 @@ def process_video(path, output_dir, every_seconds=1, min_confidence=0.8):
                 video=os.path.basename(path),
                 snapshot="",
             )
-            reading = PlateReading(raw_text, cleaned, ocr_conf, cand.box, index, timestamp, reading_valid)
-            if not filter_readings([reading], min_confidence=min_confidence):
-                continue
-            snap_name = f"frame-{index}-{cleaned}.png"
-            snap_path = os.path.join(snapshot_dir, snap_name)
-            save_snapshot(frame, cand.box, cleaned, snap_path, score)
-            entry.snapshot = snap_name
-            entries.append(entry)
-    entries = suppress_duplicates(entries)
+            found.append((entry, frame.copy(), cand.box))
+    entries = suppress_duplicates([entry for entry, _, _ in found])
+    kept_frames = {(entry.plate, entry.frame_index): (frame, box) for entry, frame, box in found}
+    for entry in entries:
+        frame, box = kept_frames[(entry.plate, entry.frame_index)]
+        snap_name = f"frame-{entry.frame_index}-{entry.plate}.png"
+        save_snapshot(frame, box, entry.plate, os.path.join(snapshot_dir, snap_name), entry.confidence)
+        entry.snapshot = snap_name
     append_to_csv(entries, os.path.join(output_dir, "plates.csv"))
     append_to_json(entries, os.path.join(output_dir, "plates.json"))
     build_report(entries, os.path.join(output_dir, "report.md"))
