@@ -49,6 +49,9 @@ def test_all_plate_formats_validate():
         "ABC-12-1234",
         "LEK-17-1269",
         "ABC-12B-123",
+        "ABC 000",
+        "ABC 0000",
+        "ABC-00-0000",
     ):
         assert is_valid_plate(plate), plate
 
