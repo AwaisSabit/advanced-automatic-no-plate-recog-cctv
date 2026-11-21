@@ -146,3 +146,19 @@ def confidence_score(cleaned_text, ocr_confidence):
     if is_valid_plate(cleaned_text):
         return round(min(1.0, ocr_confidence + 0.05), 3)
     return round(ocr_confidence * 0.7, 3)
+
+
+def filter_readings(readings, min_confidence=0.8):
+    """Keep only readable plates from a list of PlateReading objects.
+
+    A reading is kept when its cleaned text is a valid plate and
+    its combined confidence reaches the threshold. Blurry, partial
+    and misread plates are dropped, so the log only holds plates
+    worth acting on.
+    """
+    kept = []
+    for reading in readings:
+        score = confidence_score(reading.cleaned_text, reading.confidence)
+        if reading.is_valid and score >= min_confidence:
+            kept.append(reading)
+    return kept

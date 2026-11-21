@@ -4,6 +4,7 @@ from conftest import make_plate_image
 from plateforge.ocr import (
     clean_plate_text,
     confidence_score,
+    filter_readings,
     is_valid_plate,
     read_plate_text,
     read_text,
@@ -68,3 +69,13 @@ def test_confidence_score_rewards_valid_plates():
     assert confidence_score("ABC-123", 0.99) == 1.0
     assert confidence_score("ABC-DEF", 0.9) == 0.63
     assert confidence_score("", 0.9) == 0.0
+
+
+def test_clear_filter_keeps_only_readable_plates():
+    from plateforge.models import PlateReading
+
+    good = PlateReading("ABC-123", "ABC-123", 0.95, (0, 0, 10, 10), 0, 0.0, True)
+    weak = PlateReading("ABC-123", "ABC-123", 0.5, (0, 0, 10, 10), 1, 0.1, True)
+    bad = PlateReading("ABC-DEF", "ABC-DEF", 0.95, (0, 0, 10, 10), 2, 0.2, False)
+    assert filter_readings([good, weak, bad]) == [good]
+    assert filter_readings([good, weak, bad], min_confidence=0.5) == [good, weak]
