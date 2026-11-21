@@ -93,3 +93,27 @@ def suppress_duplicates(entries, window_seconds=5.0):
         last_seen[entry.plate] = entry.video_time
         kept.append(entry)
     return kept
+
+
+def search_log(entries, plate=None, start_time=None, end_time=None):
+    """Search log entries by plate number, time range, or both.
+
+    The plate match ignores spaces and hyphens and is case
+    insensitive, so searching for "abc123" finds "ABC-123".
+    Times are video times in seconds. Returns matches in time order.
+    """
+    wanted = None
+    if plate:
+        wanted = "".join(ch for ch in plate.upper() if ch.isalnum())
+    found = []
+    for entry in entries:
+        if wanted:
+            entry_plate = "".join(ch for ch in entry.plate.upper() if ch.isalnum())
+            if wanted not in entry_plate:
+                continue
+        if start_time is not None and entry.video_time < start_time:
+            continue
+        if end_time is not None and entry.video_time > end_time:
+            continue
+        found.append(entry)
+    return sorted(found, key=lambda e: e.video_time)

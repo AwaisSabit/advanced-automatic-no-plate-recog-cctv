@@ -1,6 +1,13 @@
 """Tests for plate logging, duplicate suppression and search helpers."""
 
-from plateforge.log import append_to_csv, append_to_json, load_csv, load_json, suppress_duplicates
+from plateforge.log import (
+    append_to_csv,
+    append_to_json,
+    load_csv,
+    load_json,
+    search_log,
+    suppress_duplicates,
+)
 from plateforge.models import LogEntry
 
 
@@ -38,3 +45,15 @@ def test_same_plate_after_window_is_logged_again():
 def test_different_plates_are_all_kept():
     entries = [_entry(video_time=1.0), _entry("LEK-17-1269", 1.5, 15)]
     assert len(suppress_duplicates(entries)) == 2
+
+
+def test_search_by_plate_ignores_case_and_separators():
+    entries = [_entry(video_time=1.0), _entry("LEK-17-1269", 2.0, 20)]
+    assert [e.plate for e in search_log(entries, plate="abc123")] == ["ABC-123"]
+    assert [e.plate for e in search_log(entries, plate="LEK 17")] == ["LEK-17-1269"]
+
+
+def test_search_by_time_range():
+    entries = [_entry(video_time=1.0), _entry("LEK-17-1269", 5.0, 50), _entry("XYZ-999", 9.0, 90)]
+    assert [e.plate for e in search_log(entries, start_time=2.0, end_time=6.0)] == ["LEK-17-1269"]
+    assert len(search_log(entries, plate="XYZ", start_time=0.0, end_time=5.0)) == 0
