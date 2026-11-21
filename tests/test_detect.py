@@ -1,7 +1,13 @@
 """Tests for plate region detection."""
 
 from conftest import make_car_frame
-from plateforge.detect import filter_candidates, find_plate_candidates, score_candidates
+from plateforge.detect import (
+    crop_plate,
+    filter_candidates,
+    find_plate_candidates,
+    score_candidates,
+    zoom_plate,
+)
 from plateforge.models import PlateCandidate
 
 
@@ -32,3 +38,14 @@ def test_real_plate_scores_high_and_shape_scores_low():
     tall = PlateCandidate(x=10, y=10, width=40, height=200, area=8000, aspect_ratio=0.2)
     assert filter_candidates([tall], frame.shape) == []
     assert filter_candidates(candidates, frame.shape)
+
+
+def test_crop_and_zoom_plate():
+    frame = make_car_frame(car_x=100)
+    candidates = filter_candidates(find_plate_candidates(frame), frame.shape)
+    assert candidates
+    cropped = crop_plate(frame, candidates[0])
+    assert cropped.shape[0] > 20 and cropped.shape[1] > 100
+    zoomed = zoom_plate(cropped, scale=2.0)
+    assert zoomed.shape[0] == cropped.shape[0] * 2
+    assert zoomed.shape[1] == cropped.shape[1] * 2

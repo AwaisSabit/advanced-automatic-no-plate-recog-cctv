@@ -95,3 +95,29 @@ def score_candidates(candidates, frame_shape):
 def filter_candidates(candidates, frame_shape, min_score=50):
     """Keep only candidates that score high enough to be a plate."""
     return [c for c in score_candidates(candidates, frame_shape) if c.score >= min_score]
+
+
+def crop_plate(frame, candidate, padding=5):
+    """Cut the plate region out of a frame, with a small border."""
+    h, w = frame.shape[:2]
+    x = max(0, candidate.x - padding)
+    y = max(0, candidate.y - padding)
+    x2 = min(w, candidate.x + candidate.width + padding)
+    y2 = min(h, candidate.y + candidate.height + padding)
+    return frame[y:y2, x:x2]
+
+
+def zoom_plate(plate_image, scale=2.0):
+    """Enlarge a cropped plate so the text is bigger for OCR.
+
+    Uses cubic interpolation. Zooming cannot add detail that is not
+    in the pixels, but a bigger plate reads better.
+    """
+    if scale <= 0:
+        raise ValueError("Zoom scale must be positive")
+    height, width = plate_image.shape[:2]
+    return cv2.resize(
+        plate_image,
+        (int(width * scale), int(height * scale)),
+        interpolation=cv2.INTER_CUBIC,
+    )
