@@ -1,6 +1,6 @@
 """Tests for frame extraction by interval."""
 
-from plateforge.extract import extract_by_interval, extract_by_range
+from plateforge.extract import extract_at_timestamps, extract_by_interval, extract_by_range
 
 
 def test_extract_every_second(video_path):
@@ -22,3 +22,9 @@ def test_extract_by_range(video_path):
 def test_extract_by_range_with_interval(video_path):
     frames = extract_by_range(str(video_path), 0.5, 2.5, every_seconds=1)
     assert [f[1] for f in frames] == [0.5, 1.5, 2.5]
+
+
+def test_extract_at_timestamps(video_path):
+    frames = extract_at_timestamps(str(video_path), [0.0, 1.55, 2.9])
+    assert [f[0] for f in frames] == [0, 15, 29]
+    assert [f[1] for f in frames] == [0.0, 1.5, 2.9]

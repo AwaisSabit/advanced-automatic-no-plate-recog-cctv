@@ -22,6 +22,25 @@ def extract_by_interval(path, every_seconds=None, every_nth=None):
     return picked
 
 
+def extract_at_timestamps(path, timestamps):
+    """Extract the frame nearest to each requested timestamp (seconds).
+
+    Returns one (frame_index, timestamp, frame) per requested time,
+    in the order given. Raises ValueError for an empty list.
+    """
+    wanted = sorted(float(t) for t in timestamps)
+    if not wanted:
+        raise ValueError("Give at least one timestamp")
+    picked = []
+    for target in wanted:
+        best = None
+        for index, timestamp, frame in iter_frames(path):
+            if best is None or abs(timestamp - target) < abs(best[1] - target):
+                best = (index, timestamp, frame)
+        picked.append(best)
+    return picked
+
+
 def extract_by_range(path, start_time, end_time, every_seconds=None):
     """Extract frames between start_time and end_time (seconds).
 
