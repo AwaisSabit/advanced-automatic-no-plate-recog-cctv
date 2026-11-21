@@ -131,3 +131,18 @@ def is_valid_plate(text):
     if not any(ch.isdigit() for ch in cleaned):
         return False
     return all(_GROUP_RE.fullmatch(g) for g in groups[1:])
+
+
+def confidence_score(cleaned_text, ocr_confidence):
+    """Combine the OCR confidence with the plate-format check.
+
+    A reading that looks like a real plate keeps its OCR score
+    (with a small bonus, capped at 1.0). A reading that fails the
+    format check is probably a misread, so its score is cut by
+    almost a third. The result is always between 0 and 1.
+    """
+    if not cleaned_text:
+        return 0.0
+    if is_valid_plate(cleaned_text):
+        return round(min(1.0, ocr_confidence + 0.05), 3)
+    return round(ocr_confidence * 0.7, 3)

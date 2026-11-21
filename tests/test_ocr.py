@@ -1,7 +1,13 @@
 """Tests for OCR reading of plate text (real RapidOCR, no stubs)."""
 
 from conftest import make_plate_image
-from plateforge.ocr import clean_plate_text, is_valid_plate, read_plate_text, read_text
+from plateforge.ocr import (
+    clean_plate_text,
+    confidence_score,
+    is_valid_plate,
+    read_plate_text,
+    read_text,
+)
 
 
 def test_ocr_reads_clear_synthetic_plate():
@@ -55,3 +61,10 @@ def test_plate_with_no_digits_is_rejected():
 def test_ocr_confusion_fixed_by_position():
     assert clean_plate_text("ABC-1O3") == "ABC-103"
     assert clean_plate_text("AB0-123") == "ABO-123"
+
+
+def test_confidence_score_rewards_valid_plates():
+    assert confidence_score("ABC-123", 0.9) == 0.95
+    assert confidence_score("ABC-123", 0.99) == 1.0
+    assert confidence_score("ABC-DEF", 0.9) == 0.63
+    assert confidence_score("", 0.9) == 0.0
