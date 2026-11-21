@@ -20,3 +20,24 @@ def extract_by_interval(path, every_seconds=None, every_nth=None):
             if index % every_nth == 0:
                 picked.append((index, timestamp, frame))
     return picked
+
+
+def extract_by_range(path, start_time, end_time, every_seconds=None):
+    """Extract frames between start_time and end_time (seconds).
+
+    With every_seconds set, only one frame per interval inside the
+    range is kept. Raises ValueError for an empty or reversed range.
+    """
+    if start_time < 0 or end_time <= start_time:
+        raise ValueError("Need 0 <= start_time < end_time")
+    picked = []
+    last_kept = None
+    for index, timestamp, frame in iter_frames(path):
+        if timestamp < start_time or timestamp > end_time:
+            continue
+        if every_seconds is not None:
+            if last_kept is not None and timestamp - last_kept < every_seconds - 1e-9:
+                continue
+            last_kept = timestamp
+        picked.append((index, timestamp, frame))
+    return picked
