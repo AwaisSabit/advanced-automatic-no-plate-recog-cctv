@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "plateforge"
+version = "1.0.0"
+description = "An advanced automatic number plate recognition tool for CCTV footage: detect plates, read them with OCR, and log them with timestamps."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+authors = [{name = "Awais Sabit", email = "awaissabit@gmail.com"}]
+keywords = ["anpr", "number-plate", "cctv", "ocr", "opencv", "video", "cli", "python"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Intended Audience :: End Users/Desktop",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Multimedia :: Video",
+    "Topic :: Utilities",
+]
+dependencies = [
+    "opencv-python-headless>=4",
+    "numpy>=1.26",
+    "Pillow>=10",
+    "rapidocr-onnxruntime>=1",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8"]
+
+[project.scripts]
+plateforge = "plateforge.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/AwaisSabit/advanced-anpr-cctv"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
