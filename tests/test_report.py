@@ -19,10 +19,10 @@ def test_snapshot_has_box_and_opens(tmp_path):
 def test_report_lists_every_plate(tmp_path):
     entries = [
         LogEntry("ABC-123", 0.95, 1700000000.0, 1.0, 10, "cctv.mp4", "snap1.png"),
-        LogEntry("LEK-17-1269", 0.9, 1700000000.0, 2.0, 20, "cctv.mp4", "snap2.png"),
+        LogEntry("ABC-12-1234", 0.9, 1700000000.0, 2.0, 20, "cctv.mp4", "snap2.png"),
     ]
     path = build_report(entries, str(tmp_path / "report.md"))
     text = open(path).read()
     assert "Plates detected: 2" in text
-    assert "ABC-123" in text and "LEK-17-1269" in text
+    assert "ABC-123" in text and "ABC-12-1234" in text
     assert "snap1.png" in text

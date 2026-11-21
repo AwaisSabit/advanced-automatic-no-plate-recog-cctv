@@ -117,7 +117,7 @@ def is_valid_plate(text):
     digits with an optional letter in the middle group, with spaces
     or hyphens as separators in any position. Examples that pass:
     ABC-123, ABC 123, ABC-1234, AB-123, ABC-12-133, ABC-12-1234
-    (LEK-17-1269), ABC-12B-123, ABC 12B 123. A plate with no digits
+    (ABC-12-1234), ABC-12B-123, ABC 12B 123. A plate with no digits
     is rejected.
     """
     cleaned = clean_plate_text(text)

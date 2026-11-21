@@ -19,9 +19,9 @@ def test_ocr_reads_clear_synthetic_plate():
 
 
 def test_ocr_reads_pakistani_style_plate():
-    img = make_plate_image("LEK-17-1269")
+    img = make_plate_image("ABC-12-1234")
     text, confidence = read_plate_text(img)
-    assert text == "LEK-17-1269"
+    assert text == "ABC-12-1234"
     assert confidence > 0.9
 
 
@@ -47,7 +47,7 @@ def test_all_plate_formats_validate():
         "ABC 1234",
         "AB-123",
         "ABC-12-1234",
-        "LEK-17-1269",
+        "ABC-12-1234",
         "ABC-12B-123",
         "ABC 000",
         "ABC 0000",
