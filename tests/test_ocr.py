@@ -1,7 +1,7 @@
 """Tests for OCR reading of plate text (real RapidOCR, no stubs)."""
 
 from conftest import make_plate_image
-from plateforge.ocr import read_plate_text, read_text
+from plateforge.ocr import clean_plate_text, is_valid_plate, read_plate_text, read_text
 
 
 def test_ocr_reads_clear_synthetic_plate():
@@ -23,3 +23,35 @@ def test_ocr_returns_nothing_for_blank_image():
 
     blank = np.full((120, 480, 3), 255, np.uint8)
     assert read_text(blank) == []
+
+
+def test_cleaning_normalises_spaces_and_hyphens():
+    assert clean_plate_text("abc 123") == "ABC-123"
+    assert clean_plate_text("ABC-123") == "ABC-123"
+    assert clean_plate_text("  ABC   12B   123  ") == "ABC-12B-123"
+
+
+def test_all_plate_formats_validate():
+    for plate in (
+        "ABC 123",
+        "ABC-12-133",
+        "ABC 12B 123",
+        "ABC-123",
+        "ABC 1234",
+        "AB-123",
+        "ABC-12-1234",
+        "LEK-17-1269",
+        "ABC-12B-123",
+    ):
+        assert is_valid_plate(plate), plate
+
+
+def test_plate_with_no_digits_is_rejected():
+    assert not is_valid_plate("ABC-DEF")
+    assert not is_valid_plate("ABC")
+    assert not is_valid_plate("")
+
+
+def test_ocr_confusion_fixed_by_position():
+    assert clean_plate_text("ABC-1O3") == "ABC-103"
+    assert clean_plate_text("AB0-123") == "ABO-123"

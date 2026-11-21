@@ -55,3 +55,79 @@ def read_plate_text(plate_image):
         if readings:
             return readings[0]
     return ("", 0.0)
+
+
+import re
+
+_LETTER_FIXES = str.maketrans({"0": "O", "1": "I", "5": "S"})
+
+
+def _fix_letters(token):
+    """Fix OCR confusions inside a letter group: 0 looks like O."""
+    return token.translate(_LETTER_FIXES)
+
+
+def _fix_digits(token):
+    """Fix OCR confusions inside a digit group: O looks like 0.
+
+    A letter that belongs in the group (like the B in 12B) is kept:
+    only characters that are common digit confusions are replaced.
+    """
+    fixed = []
+    for ch in token:
+        if ch.isdigit():
+            fixed.append(ch)
+        elif ch in "Oo":
+            fixed.append("0")
+        elif ch in "Il":
+            fixed.append("1")
+        else:
+            fixed.append(ch)
+    return "".join(fixed)
+
+
+def clean_plate_text(raw):
+    """Normalise OCR output into one canonical plate form.
+
+    Uppercase, collapse separators, and treat spaces and hyphens as
+    the same separator, so "ABC 123", "ABC-123" and "ABC 123" all
+    become "ABC-123". Letter groups get letter fixes, digit groups
+    get digit fixes, so a misread O in the digits becomes a 0.
+    Returns "" when nothing usable is left.
+    """
+    if not raw:
+        return ""
+    upper = raw.upper().strip()
+    tokens = [t for t in re.split(r"[^A-Z0-9]+", upper) if t]
+    if not tokens:
+        return ""
+    fixed = [_fix_letters(tokens[0])]
+    for token in tokens[1:]:
+        fixed.append(_fix_digits(token))
+    return "-".join(fixed)
+
+
+_GROUP_RE = re.compile(r"^\d{1,4}[A-Z]?$")
+
+
+def is_valid_plate(text):
+    """Permissive plate check, not a strict one.
+
+    Accepts 2-3 letters at the start, then one or two groups of
+    digits with an optional letter in the middle group, with spaces
+    or hyphens as separators in any position. Examples that pass:
+    ABC-123, ABC 123, ABC-1234, AB-123, ABC-12-133, ABC-12-1234
+    (LEK-17-1269), ABC-12B-123, ABC 12B 123. A plate with no digits
+    is rejected.
+    """
+    cleaned = clean_plate_text(text)
+    if not cleaned:
+        return False
+    groups = cleaned.split("-")
+    if len(groups) < 2 or len(groups) > 3:
+        return False
+    if not re.fullmatch(r"[A-Z]{2,3}", groups[0]):
+        return False
+    if not any(ch.isdigit() for ch in cleaned):
+        return False
+    return all(_GROUP_RE.fullmatch(g) for g in groups[1:])
